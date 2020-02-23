@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>QR Exams</title>
+<script src='html/qrcode.min.js'></script>
+    <script type="text/javascript">
+    var data = {{ data|tojson|safe }};
+
+      function submit() {
+        base = document.getElementById("base").value;
+        var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+             fillQR(base, JSON.parse(this.responseText));
+            }
+        };
+        xhttp.open("GET", '../admin/'+"{'command':'getQRs'}", true);
+        xhttp.send();
+      }
+
+      function fillQR(base, data) {
+        bodypart = document.getElementById("qrcodes");
+        bodypart.innerHTML = "";
+
+        for (let [key, value] of Object.entries(data)) {
+          var option = document.createElement("b");
+          new QRCode(option, "http://"+base+"/"+key);
+          a=document.createElement("a");
+          a.href = "//"+base+"/"+key;
+          a.text = key+" | "+value;
+          option.append(a);
+          bodypart.append(option);
+        }
+      }
+      function init() {
+        document.getElementById("base").value = data+":5000";
+        submit();
+      }
+    </script>
+
+  </head>
+  <body onload="init()">
+    <input id="base" type="text" name="" value="">
+    <button onclick="submit()" type="button" name="button">Create</button>
+    <div id="qrcodes"></div>
+  </body>
+</html>

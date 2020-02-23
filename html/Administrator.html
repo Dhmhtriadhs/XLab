@@ -1,0 +1,298 @@
+<html>
+<head><title>X-Ray Administrator</title>
+  <script type="text/javascript">
+  var xrays = {};
+  var bp = {
+    "Κρανίο":["Ο-Π προβολή κρανίου", "Πλάγια προβολή κρανίου", "Πωγωνορνική προβολή κρανίου κατά Waters", "Κατα μέτωπο προβολή οφθαλμικών κόγχων", "Πλάγια προβολή οφθαλμικών κόγχων", "Προβολή θόλου κρανίου Towne", "Υπογένεια προβολή βάσεως κρανίου", "Προβολή μαστοειδών αποφύσεων Schuller", "Πλάγια προβολή κροταφογναθικών αρθρώσεων", "Διακογχική προβολή ακουστικών πόρων", "Πλάγια προβολή τουρκικού εφιππίου", "Πλάγια προβολή ρινικών οστών", "Υπογένεια προβολή ζυγωματικών τόξων", "Πλάγια προβολή κάτω γνάθου", "Κατά μέτωπο προβολή κάτω γνάθου"],
+    "Θώρακας - Ωμική Ζώνη":["Προβολή άνω πλευρών", "Προβολή κάτω πλευρών", "Πλάγια προβολή στέρνου", "Κατά μέτωπο προβολή ωμοπλάτης", "Κατά μέτωπο προβολή κλείδας", "Κατά μέτωπο προβολή ώμου σε έξω και έσω στροφή", "Διαμασχαλιάια προβολή ώμου"],
+    "Σπονδυλική Στήλη":["Κατά μέτωπο προβολή ΑΜΣΣ", "Διαστοματική προβολή οδόντα", "Πλάγια προβολή ΑΜΣΣ", "Λοξή προβολή ΑΜΣΣ", "Κατά μέτωπο προβολή ΘΜΣΣ", "Πλάγια προβολή ΘΜΣΣ", "Κατά μέτωπο προβολή ΟΜΣΣ", "Πλάγια προβολή ΟΜΣΣ", "Λοξή προβολή ΟΜΣΣ", "Κατά μέτωπο προβολή ιερού οστού", "Κατά μέτωπο προβολή κόκκυγα", "Πλάγια προβολή ιερού οστού", "Έλεγχος σκολίωσης"],
+    "Πυελική":["Κατά μέτωπο προβολή λεκάνης", "Πλάγια προβολή ισχίων(βατραχοειδής)", "Κατά μέτωπο προβολή ισχίων συγκριτική", "Πλάγια προβολή ενός ισχίου", "Κατά μέτωπο προβολή ιερολαγονίων αρθρώσεων"],
+    "Κάτω Άκρα":["Κατά μέτωπο προβολή μηριαίου", "Πλάγια προβολή μηριαίου", "Κατά μέτωπο προβολή γόνατος", "Πλάγια προβολή γόνατος", "Προβολή επιγονατίδας κατά εφαπτομένη", "Διακονδύλια προβολή γόνατος", "Κατά μέτωπο προβολή κνήμης", "Πλάγια προβολή κνήμης", "Κατά μέτωπο προβολή ποδοκνημικής άρθρωσης(ΠΔΚ)", "Πλάγια προβολή ποδοκνημικής άρθρωσης(ΠΔΚ)", "Προβολή πτέρνας κατά εφαπτόμενη", "Πλάγια προβολή πτέρνας", "Κατά μέτωπο προβολή άκρου ποδός", "Λοξή προβολή άκρου ποδός"],
+    "Άνω Άκρα":["Κατά μέτωπο προβολή βραχίονα", "Πλάγια προβολή βραχίονα", "Κατά μέτωπο προβολή αγκώνα", "Πλάγια προβολή αγκώνα", "Κατά μέτωπο προβολή αντιβραχίου(πήχεως)", "Πλάγια προβολή αντιβραχίου(πήχεως)", "Κατά μέτωπο προβολή καρπού πηχεοκαρπικής άρθρωσης(ΠΧΚ)", "Πλάγια προβολή πηχεοκαρπικής άρθρωσης(ΠΧΚ)", "Προβολή σκαφοειδούς με ωλένια απόκλιση", "Κατά μέτωπο προβολή άκρου χεριού", "Λοξή προβολή άκρου χεριού"]};
+
+    function addCategory() {
+      en = document.getElementById("bodyname_en").value;
+      gr = document.getElementById("bodyname_gr").value;
+      command = {"command":"addBodypart", "en":en, "gr":gr};
+      fetch('../admin/'+JSON.stringify(command))
+      .then(data => console.log(data))
+      .catch(error => console.log('Error:' + error));
+      init();
+    }
+
+    function removeCategory() {
+      bodypart = document.getElementById("bodypart");
+      var sub = bodypart.options[bodypart.selectedIndex].text;
+      id = sub.split(" | ")[0];
+      command = {"command":"removeBodypart", "id":id};
+      fetch('../admin/'+JSON.stringify(command))
+      .then(data => console.log(data))
+      .catch(error => console.log('Error:' + error));
+      init();
+    }
+
+    function selectCategory() {
+      bodypart = document.getElementById("bodypart");
+      var sub = bodypart.options[bodypart.selectedIndex].text;
+      bodyId = parseInt(sub.split("|")[0]);
+
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          fillExams(JSON.parse(this.responseText));
+        }
+      };
+      xhttp.open("GET", '../admin/'+"{'command':'getExams', 'id':'"+String(bodyId)+"' }", true);
+      xhttp.send();
+    }
+
+    function fillExams(data) {
+      subcat = document.getElementById("exam");
+      var i;
+      for(i = subcat.options.length - 1 ; i >= 0 ; i--)
+      {         subcat.remove(i);     }
+      for (let [key, value] of Object.entries(data)) {
+        var option = document.createElement("option");
+        option.text = key+" | "+value[0]+",,,"+value[1]+",,,"+value[2]+",,,"+value[3];
+        subcat.add(option);
+      }
+    }
+
+    function addSubcategory() {
+      en = document.getElementById("exam_en").value;
+      gr = document.getElementById("exam_gr").value;
+      kV_from = document.getElementById("kV_from").value;
+      kV_to = document.getElementById("kV_to").value;
+      bodypart = document.getElementById("bodypart");
+      var sub = bodypart.options[bodypart.selectedIndex].text;
+      bodyId = parseInt(sub.split("|")[0]);
+      command = {"command":"addExam", "en":en, "gr":gr, "bodyID":String(bodyId), "from":kV_from, "to":kV_to};
+      fetch('../admin/'+JSON.stringify(command))
+      .then(data => console.log(data))
+      .catch(error => console.log('Error:' + error));
+      selectCategory()
+    }
+
+    function removeSubcategory() {
+      exam = document.getElementById("exam");
+      var sub = exam.options[exam.selectedIndex].text;
+      id = sub.split(" | ")[0];
+      command = {"command":"removeExam", "id":id};
+      fetch('../admin/'+JSON.stringify(command))
+      .then(data => console.log(data))
+      .catch(error => console.log('Error:' + error));
+      selectCategory();
+    }
+
+    function selectSubcategory() {
+      exam = document.getElementById("exam");
+      var sub = exam.options[exam.selectedIndex].text;
+      id = parseInt(sub.split(" | ")[0]);
+
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          fillXrays(JSON.parse(this.responseText));
+        }
+      };
+      xhttp.open("GET", '../admin/'+"{'command':'getXrays', 'id':'"+String(id)+"' }", true);
+      xhttp.send();
+    }
+
+    function fillXrays(data) {
+      xrays = data;
+      xrs = document.getElementById("xrays");
+      var i;
+      for(i = xrs.options.length - 1 ; i >= 0 ; i--)
+      {         xrs.remove(i);     }
+      for (let [key, value] of Object.entries(data)) {
+        var option = document.createElement("option");
+        option.text = key+" | "+value[0]+",,,"+value[1];
+        xrs.add(option);
+      }
+    }
+
+    function uploadImage(event) {
+      ft = document.getElementById("upload").files[0];
+      document.getElementById("ximage").src = URL.createObjectURL(event.target.files[0]);
+      let req = new XMLHttpRequest();
+      req.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          jsn = JSON.parse(this.responseText);
+          document.getElementById("ximage").src = "../img/"+jsn["filename"];
+        }
+      };
+      let formData = new FormData();
+      formData.append("photo", ft);
+      req.open("POST", '/../upload');
+      req.send(formData);
+    }
+
+    function removeImage() {
+      xray = document.getElementById("xrays");
+      var sub = xray.options[xray.selectedIndex].text;
+      id = sub.split(" | ")[0];
+      command = {"command":"removeXray", "id":id};
+      fetch('../admin/'+JSON.stringify(command))
+      .then(data => console.log(data))
+      .catch(error => console.log('Error:' + error));
+      selectSubcategory();
+    }
+
+    function addImage() {
+      exam = document.getElementById("exam");
+      var sub = exam.options[exam.selectedIndex].text;
+      id = sub.split(" | ")[0];
+      // Data
+      xray_name = document.getElementById("XName").value;
+      xray_real = document.getElementById("XName_real").value;
+      patient = document.getElementById("patient").value;
+      kV = document.getElementById("kV").value;
+      mAs = document.getElementById("mAs").value;
+      grid = document.getElementById("grid").checked;
+      if (grid) {grid=1;} else {grid=0;}
+      stand = "bed";
+      if (document.getElementById("stand").checked) {stand = "stand"};
+      weight = "xs";
+      if (document.getElementById("s").checked) {weight = "s"};
+      if (document.getElementById("normal").checked) {weight = "normal"};
+      if (document.getElementById("l").checked) {weight = "l"};
+      if (document.getElementById("xl").checked) {weight = "xl"};
+      xray_src = document.getElementById("ximage").src.split("/");
+      xray_src = xray_src[xray_src.length-1];
+      command = {'command':"addXray", "xname":xray_name,"examID":id,
+      "patient":patient, "kV":kV, "mAs":mAs, "real":xray_real,
+      "grid":grid, "stand":stand, "weight":weight,
+      'xsrc':xray_src };
+      fetch('../admin/'+JSON.stringify(command))
+      .then(data => console.log(data))
+      .catch(error => console.log('Error:' + error));
+      selectSubcategory()
+    }
+
+    function clearImage() {
+      document.getElementById("XName").value = "";
+      document.getElementById("XName_real").value = "";
+      document.getElementById("patient").value = "";
+      document.getElementById("kV").value = 50;
+      document.getElementById("mAs").value = 10;
+      document.getElementById("grid").checked = false;
+      document.getElementById("stand").checked = true;
+      document.getElementById("normal").checked = true;
+      document.getElementById("ximage").src = "../img/";
+    }
+
+    function selectImage() {
+      xray = document.getElementById("xrays");
+      var sub = xray.options[xray.selectedIndex].text;
+      id = sub.split(" | ")[0];
+      document.getElementById("XName").value = xrays[id][0];
+      document.getElementById("XName_real").value = xrays[id][1];
+      document.getElementById("patient").value = xrays[id][2];
+      document.getElementById("kV").value = xrays[id][3];
+      document.getElementById("mAs").value = xrays[id][4];
+      document.getElementById("grid").checked = xrays[id][5];
+      document.getElementById("stand").checked = true;
+      if(xrays[id][6]==="bed") {
+        document.getElementById("bed").checked = true;    }
+        document.getElementById("normal").checked = true;
+        if(xrays[id][7]==="xs") {
+          document.getElementById("xs").checked = true;
+        } else if(xrays[id][7]==="s") {
+          document.getElementById("s").checked = true;
+        }  else if(xrays[id][7]==="l") {
+          document.getElementById("l").checked = true;
+        } else if(xrays[id][7]==="xl") {
+          document.getElementById("xl").checked = true;
+        }
+        document.getElementById("ximage").src = "../img/"+xrays[id][8];
+      }
+
+      function fillBodyparts(data) {
+        bodypart = document.getElementById("bodypart");
+        var i;
+        for(i = bodypart.options.length - 1 ; i >= 0 ; i--)
+        {
+          bodypart.remove(i);
+        }
+        for (let [key, value] of Object.entries(data)) {
+          var option = document.createElement("option");
+          option.text = key+" | "+value[0]+",,,"+value[1];
+          bodypart.add(option);}
+        }
+
+        function init() {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              fillBodyparts(JSON.parse(this.responseText));
+            }
+          };
+          xhttp.open("GET", '../admin/'+"{'command':'getBodyparts'}", true);
+          xhttp.send();
+        }
+      </script>
+    </head>
+    <body onload="init()">
+      <form class="main" action="index.html" method="post">
+        <fieldset><legend>Body part</legend>
+          <label for="bodyname_en">English</label>
+          <input id="bodyname_en" type="text" name="" value="">
+          <label for="bodyname_gr">Greek</label>
+          <input id="bodyname_gr" type="text" name="" value=""><br>
+          <button onclick="addCategory()" type="button" name="button">Add</button>
+          <button onclick="removeCategory()" type="button" name="button">Remove</button>
+          <select onchange="selectCategory()" id="bodypart" size="3" style="width:100%"></select>
+        </fieldset>
+        <fieldset><legend>Exam</legend>
+          <label for="exam_en">English</label>
+          <input id="exam_en" type="text" name="" value="">
+          <label for="exam_gr">Greek</label>
+          <input id="exam_gr" type="text" name="" value=""><br>
+          <label for="kV_from">Lower kV</label>
+          <input id="kV_from" type="number" name="" value="60">
+          <label for="kV_to">Higher kV</label>
+          <input id="kV_to" type="number" name="" value="80"><br>
+          <button onclick="addSubcategory()" type="button" name="button">Add</button>
+          <button onclick="removeSubcategory()" type="button" name="button">Remove</button>
+          <select onchange="selectSubcategory()" id="exam" size="3"  style="width:100%"></select>
+        </fieldset>
+        <fieldset><legend>Xray</legend>
+          <table width="100%">
+            <td valign="top">
+              <label for="Xname">Xray name:</label>
+              <input id="XName" type="text" name="" value="">
+              <label for="XName_real">Xray real name:</label>
+              <input id="XName_real" type="text" name="" value=""><br>
+              <label for="patient">Patient name/surname:</label>
+              <input id="patient" type="text" name="name" value=""><br>
+              <label for="kV">kV:</label>
+              <input id="kV" type="text" name="" value="">
+              <label for="mAs">mAs:</label>
+              <input id="mAs" type="text" name="" value=""><br>
+              <label for="grid"> Bucky / Grid: </label>
+              <input id="grid" type="checkbox" name="" value="true"><br>
+              <label for="bed">Stand:</label>
+              <input id="stand" type="radio" name="stand" value="upright" checked>||</input>
+              <input id="bed" type="radio" name="stand" value="bed">=</input><br>
+              <label for="normal">Weight:</label>
+              <input id="xs" type="radio" name="weight" value="xs">XS</input>
+              <input id="s" type="radio" name="weight" value="s">S</input>
+              <input id="normal" type="radio" name="weight" value="***" checked>=</input>
+              <input id="l" type="radio" name="weight" value="l">L</input>
+              <input id="xl" type="radio" name="weight" value="xl">XL</input><br>
+              <label for="upload">Upload Xray: </label>
+              <input onchange="uploadImage(event)" type="file" accept="image/*" id="upload"></input>
+              <br>
+              <button onclick="addImage()" type="button" name="button">Add</button>
+              <button onclick="removeImage()" type="button" name="button">Remove</button>
+              <button onclick="clearImage()" type="button" name="button">Clear</button><br>
+              <select onchange="selectImage()" id="xrays" size="3"  style="width:100%"/>
+
+            </td>
+            <td><img id="ximage" src="#" alt="xray" style="max-width:50%;"></td>
+          </table>
+        </fieldset>
+      </form>
+    </body>
+    </html>
